@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI模型智能选型系统</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        :root {
+            --primary: #4361ee;
+            --primary-light: #4895ef;
+            --secondary: #3f37c9;
+            --accent: #f72585;
+            --success: #4cc9f0;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+            --gray-light: #e9ecef;
+            --border-radius: 12px;
+            --shadow: 0 10px 20px rgba(0, 0, 0, 0.08);
+            --transition: all 0.3s ease;
+        }
+        
+        body {
+            background: linear-gradient(135deg, #f5f7fa 0%, #e3f2fd 100%);
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px 20px;
+        }
+        
+        h1 {
+            color: var(--primary);
+            font-size: 2.8rem;
+            margin-bottom: 12px;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: var(--gray);
+            font-size: 1.3rem;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            padding: 30px;
+            margin-bottom: 30px;
+            transition: var(--transition);
+            border-top: 4px solid var(--primary);
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.12);
+        }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--gray-light);
+        }
+        
+        .card-icon {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 15px;
+            font-size: 1.3rem;
+        }
+        
+        .card-title {
+            color: var(--primary);
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .task-input {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        textarea {
+            width: 100%;
+            min-height: 140px;
+            padding: 18px;
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            resize: vertical;
+            transition: var(--transition);
+            background: var(--light);
+        }
+        
+        textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .btn {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            border: none;
+            padding: 14px 28px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: var(--transition);
+            align-self: flex-start;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 7px 14px rgba(67, 97, 238, 0.3);
+        }
+        
+        .btn:disabled {
+            background: var(--gray);
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .analysis-result {
+            background: linear-gradient(135deg, #e3f2fd, #f3e5f5);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-top: 20px;
+            border-left: 4px solid var(--success);
+        }
+        
+        .models-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 25px;
+            margin-top: 20px;
+        }
+        
+        .model-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            transition: var(--transition);
+            border-top: 4px solid var(--primary-light);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            transform: scaleX(0);
+            transition: var(--transition);
+        }
+        
+        .model-card:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .model-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .model-card.selected {
+            border-top-color: var(--success);
+            box-shadow: 0 5px 15px rgba(76, 201, 240, 0.3);
+        }
+        
+        .model-name {
+            font-size: 1.4rem;
+            color: var(--primary);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+        
+        .model-desc {
+            color: var(--gray);
+            margin-bottom: 18px;
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+        
+        .model-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 18px;
+        }
+        
+        .tag {
+            background: var(--gray-light);
+            color: var(--gray);
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .tag.primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .prompt-container {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 25px;
+            margin-top: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--accent);
+        }
+        
+        .prompt-box {
+            background: var(--light);
+            border: 1px solid var(--gray-light);
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin: 20px 0;
+            font-family: 'Consolas', 'Monaco', monospace;
+            white-space: pre-wrap;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            position: relative;
+        }
+        
+        .prompt-box::before {
+            content: 'PROMPT';
+            position: absolute;
+            top: -10px;
+            left: 15px;
+            background: var(--accent);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+        
+        .recommendation {
+            background: linear-gradient(135deg, #e8f5e9, #f1f8e9);
+            border-radius: var(--border-radius);
+            padding: 30px;
+            margin-top: 30px;
+            border-left: 4px solid var(--success);
+        }
+        
+        .recommendation-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .recommendation-header .icon {
+            background: var(--success);
+            color: white;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 18px;
+            font-size: 1.4rem;
+        }
+        
+        .recommendation-reason {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 3px solid var(--success);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .hidden {
+            display: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 30px;
+        }
+        
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--primary);
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .progress-container {
+            margin: 25px 0;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--gray-light);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--accent));
+            border-radius: 4px;
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .step-indicator {
+            display: flex;
+            justify-content: center;
+            margin: 30px 0;
+            gap: 10px;
+        }
+        
+        .step {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--gray-light);
+            transition: var(--transition);
+        }
+        
+        .step.active {
+            background: var(--primary);
+            transform: scale(1.2);
+        }
+        
+        @media (max-width: 768px) {
+            .models-container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2.2rem;
+            }
+            
+            .card {
+                padding: 20px;
+            }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease forwards;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AI模型智能选型系统</h1>
+            <p class="subtitle">基于任务分析与多模型评测的智能推荐平台，为您匹配最合适的AI模型与Prompt</p>
+        </header>
+        
+        <div class="step-indicator">
+            <div class="step active" id="step1-indicator"></div>
+            <div class="step" id="step2-indicator"></div>
+            <div class="step" id="step3-indicator"></div>
+        </div>
+        
+        <div class="card fade-in" id="inputSection">
+            <div class="card-header">
+                <div class="card-icon">
+                    <i class="fas fa-tasks"></i>
+                </div>
+                <h2 class="card-title">任务描述</h2>
+            </div>
+            <div class="task-input">
+                <p>请详细描述您的任务需求，系统将分析任务类型并推荐最适合的AI模型和Prompt：</p>
+                <textarea id="taskInput" placeholder="例如：我需要一个AI助手来帮我撰写技术博客文章，主题是'人工智能在医疗领域的应用'，要求内容专业但易于理解，包含实际案例，字数在1500字左右..."></textarea>
+                <button id="analyzeBtn" class="btn">
+                    <i class="fas fa-rocket"></i>
+                    分析任务并推荐模型
+                </button>
+            </div>
+        </div>
+        
+        <div id="analysisSection" class="hidden">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-chart-line"></i>
+                    </div>
+                    <h2 class="card-title">任务分析与模型筛选</h2>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>分析进度</span>
+                        <span id="progressPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" id="progressBar"></div>
+                    </div>
+                </div>
+                
+                <div id="loadingAnalysis" class="loading">
+                    <div class="spinner"></div>
+                    <p>正在分析任务并筛选合适的模型...</p>
+                </div>
+                
+                <div id="analysisResult" class="analysis-result hidden">
+                    <h3><i class="fas fa-check-circle" style="color: var(--success); margin-right: 10px;"></i>任务分析完成</h3>
+                    <p id="taskAnalysisText" style="margin-top: 10px;"></p>
+                </div>
+                
+                <h3 style="margin: 30px 0 15px; color: var(--primary);">候选模型推荐</h3>
+                <div id="modelsContainer" class="models-container"></div>
+                
+                <h3 style="margin: 30px 0 15px; color: var(--primary);">初始Prompt生成</h3>
+                <div id="initialPrompt" class="prompt-container hidden">
+                    <p>基于您的任务需求，我们生成了以下初始Prompt：</p>
+                    <div class="prompt-box" id="initialPromptText"></div>
+                </div>
+                
+                <div style="text-align: center; margin-top: 25px;">
+                    <button id="optimizeBtn" class="btn">
+                        <i class="fas fa-magic"></i>
+                        优化Prompt并选择最佳模型
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="optimizationSection" class="hidden">
+            <div class="card fade-in">
+                <div class="card-header">
+                    <div class="card-icon">
+                        <i class="fas fa-star"></i>
+                    </div>
+                    <h2 class="card-title">Prompt优化与模型选择</h2>
+                </div>
+                
+                <div class="progress-container">
+                    <div class="progress-label">
+                        <span>优化进度</span>
+                        <span id="optimizationPercent">0%</span>
+                    </div>
+                    <div class="progress-bar">
+                        <div class="progress" id="optimizationProgress"></div>
+                    </div>
+                </div>
+                
+                <div id="loadingOptimization" class="loading">
+                    <div class="spinner"></div>
+                    <p>正在进行多轮Prompt优化与模型评测...</p>
+                </div>
+                
+                <div id="optimizationResult" class="hidden">
+                    <h3 style="margin-bottom: 20px; color: var(--primary);">优化后的Prompt</h3>
+                    <div class="prompt-container">
+                        <div class="prompt-box" id="optimizedPromptText"></div>
+                    </div>
+                    
+                    <div class="recommendation">
+                        <div class="recommendation-header">
+                            <div class="icon">
+                                <i class="fas fa-trophy"></i>
+                            </div>
+                            <h3>推荐使用模型</h3>
+                        </div>
+                        <div id="recommendedModel" class="model-card selected"></div>
+                        
+                        <h4 style="margin: 25px 0 15px; color: var(--primary);">推荐理由</h4>
+                        <div class="recommendation-reason" id="recommendationReason"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskInput = document.getElementById('taskInput');
+            const analyzeBtn = document.getElementById('analyzeBtn');
+            const analysisSection = document.getElementById('analysisSection');
+            const loadingAnalysis = document.getElementById('loadingAnalysis');
+            const analysisResult = document.getElementById('analysisResult');
+            const taskAnalysisText = document.getElementById('taskAnalysisText');
+            const modelsContainer = document.getElementById('modelsContainer');
+            const initialPrompt = document.getElementById('initialPrompt');
+            const initialPromptText = document.getElementById('initialPromptText');
+            const optimizeBtn = document.getElementById('optimizeBtn');
+            const optimizationSection = document.getElementById('optimizationSection');
+            const loadingOptimization = document.getElementById('loadingOptimization');
+            const optimizationResult = document.getElementById('optimizationResult');
+            const optimizedPromptText = document.getElementById('optimizedPromptText');
+            const recommendedModel = document.getElementById('recommendedModel');
+            const recommendationReason = document.getElementById('recommendationReason');
+            const progressBar = document.getElementById('progressBar');
+            const optimizationProgress = document.getElementById('optimizationProgress');
+            const progressPercent = document.getElementById('progressPercent');
+            const optimizationPercent = document.getElementById('optimizationPercent');
+            const step1Indicator = document.getElementById('step1-indicator');
+            const step2Indicator = document.getElementById('step2-indicator');
+            const step3Indicator = document.getElementById('step3-indicator');
+            
+            // 模拟的模型数据
+            const models = [
+                {
+                    id: 'gpt-4',
+                    name: 'GPT-4',
+                    description: 'OpenAI最新的大型语言模型，具有强大的理解和生成能力，适合复杂任务。',
+                    tags: ['文本生成', '代码编写', '复杂推理'],
+                    strength: '复杂任务处理、创造性写作',
+                    icon: 'fas fa-brain'
+                },
+                {
+                    id: 'claude-2',
+                    name: 'Claude 2',
+                    description: 'Anthropic开发的AI助手，擅长长文本处理和对话任务。',
+                    tags: ['长文本', '对话', '安全'],
+                    strength: '长文档处理、对话一致性',
+                    icon: 'fas fa-comments'
+                },
+                {
+                    id: 'llama-2',
+                    name: 'Llama 2',
+                    description: 'Meta开源的大型语言模型，在多个基准测试中表现优异。',
+                    tags: ['开源', '多语言', '可定制'],
+                    strength: '开源部署、多语言支持',
+                    icon: 'fas fa-code-branch'
+                },
+                {
+                    id: 'chatglm',
+                    name: 'ChatGLM',
+                    description: '清华大学的双语对话模型，在中文任务上表现优秀。',
+                    tags: ['中文优化', '对话', '知识问答'],
+                    strength: '中文处理、知识问答',
+                    icon: 'fas fa-language'
+                },
+                {
+                    id: 'ernie-bot',
+                    name: '文心一言',
+                    description: '百度开发的大语言模型，在中文理解和生成方面有优势。',
+                    tags: ['中文优化', '创意写作', '多轮对话'],
+                    strength: '中文创意写作、多轮对话',
+                    icon: 'fas fa-pen-fancy'
+                }
+            ];
+            
+            // 任务类型分析函数
+            function analyzeTask(task) {
+                let analysis = {
+                    type: '通用任务',
+                    complexity: '中等',
+                    language: '中文',
+                    length: '中等'
+                };
+                
+                if (task.includes('中文') || task.match(/[\u4e00-\u9fa5]/)) {
+                    analysis.language = '中文';
+                } else {
+                    analysis.language = '英文';
+                }
+                
+                if (task.includes('简单') || task.length < 50) {
+                    analysis.complexity = '简单';
+                } else if (task.includes('复杂') || task.length > 200) {
+                    analysis.complexity = '复杂';
+                }
+                
+                if (task.includes('创意') || task.includes('写作') || task.includes('生成')) {
+                    analysis.type = '创意写作';
+                } else if (task.includes('代码') || task.includes('编程')) {
+                    analysis.type = '代码相关';
+                } else if (task.includes('分析') || task.includes('总结')) {
+                    analysis.type = '分析总结';
+                } else if (task.includes('对话') || task.includes('聊天')) {
+                    analysis.type = '对话任务';
+                }
+                
+                return analysis;
+            }
+            
+            // 根据分析结果筛选模型
+            function filterModels(analysis) {
+                let filteredModels = [...models];
+                
+                // 根据语言偏好筛选
+                if (analysis.language === '中文') {
+                    filteredModels = filteredModels.filter(model => 
+                        model.id === 'chatglm' || model.id === 'ernie-bot' || 
+                        model.tags.includes('中文优化') || model.tags.includes('多语言')
+                    );
+                }
+                
+                // 根据任务类型筛选
+                if (analysis.type === '创意写作') {
+                    filteredModels = filteredModels.sort((a, b) => {
+                        if (a.strength.includes('创意写作') && !b.strength.includes('创意写作')) return -1;
+                        if (!a.strength.includes('创意写作') && b.strength.includes('创意写作')) return 1;
+                        return 0;
+                    });
+                } else if (analysis.type === '代码相关') {
+                    filteredModels = filteredModels.filter(model => 
+                        model.tags.includes('代码编写')
+                    );
+                } else if (analysis.type === '分析总结') {
+                    filteredModels = filteredModels.filter(model => 
+                        model.tags.includes('复杂推理') || model.tags.includes('知识问答')
+                    );
+                }
+                
+                // 根据复杂度筛选
+                if (analysis.complexity === '复杂') {
+                    filteredModels = filteredModels.filter(model => 
+                        model.tags.includes('复杂推理') || model.id === 'gpt-4'
+                    );
+                }
+                
+                return filteredModels.slice(0, 3); // 返回Top-3
+            }
+            
+            // 生成初始Prompt
+            function generateInitialPrompt(task, analysis) {
+                let prompt = '';
+                
+                if (analysis.type === '创意写作') {
+                    prompt = `请根据以下要求创作内容：
+主题：${task}
+要求：
+1. 内容要有创意和吸引力
+2. 结构清晰，逻辑连贯
+3. 语言生动，避免过于技术化的表述
+4. 字数在800-1500字之间
+
+请开始创作：`;
+                } else if (analysis.type === '代码相关') {
+                    prompt = `请根据以下需求编写代码：
+任务描述：${task}
+要求：
+1. 代码要简洁高效
+2. 添加必要的注释
+3. 考虑边界情况和错误处理
+4. 使用合适的编程语言
+
+请提供完整代码：`;
+                } else if (analysis.type === '分析总结') {
+                    prompt = `请对以下内容进行分析和总结：
+内容：${task}
+要求：
+1. 提取关键信息
+2. 分析主要内容
+3. 总结核心观点
+4. 提供有价值的见解
+
+请开始分析：`;
+                } else {
+                    prompt = `请完成以下任务：
+${task}
+要求：
+1. 提供详细且准确的回答
+2. 内容结构清晰
+3. 语言简洁明了
+
+请开始：`;
+                }
+                
+                return prompt;
+            }
+            
+            // 优化Prompt
+            function optimizePrompt(initialPrompt, selectedModel) {
+                // 简单的优化逻辑 - 实际应用中会更复杂
+                let optimized = initialPrompt;
+                
+                if (selectedModel.id === 'gpt-4') {
+                    optimized = optimized + "\n\n注意：请充分发挥创造力，提供深入且全面的回答。";
+                } else if (selectedModel.id === 'claude-2') {
+                    optimized = optimized + "\n\n注意：请确保回答结构清晰，逻辑连贯，适合长篇阅读。";
+                } else if (selectedModel.id === 'chatglm' || selectedModel.id === 'ernie-bot') {
+                    optimized = optimized + "\n\n注意：请使用流畅自然的中文进行回答，符合中文表达习惯。";
+                }
+                
+                return optimized;
+            }
+            
+            // 选择最佳模型
+            function selectBestModel(filteredModels, analysis) {
+                // 简单的选择逻辑 - 实际应用中会更复杂
+                if (analysis.language === '中文') {
+                    return filteredModels.find(model => model.id === 'chatglm') || 
+                           filteredModels.find(model => model.id === 'ernie-bot') || 
+                           filteredModels[0];
+                } else if (analysis.type === '创意写作') {
+                    return filteredModels.find(model => model.id === 'gpt-4') || filteredModels[0];
+                } else if (analysis.type === '代码相关') {
+                    return filteredModels.find(model => model.tags.includes('代码编写')) || filteredModels[0];
+                }
+                
+                return filteredModels[0];
+            }
+            
+            // 生成推荐理由
+            function generateRecommendationReason(model, analysis) {
+                let reason = `根据您的任务特点（${analysis.type}，${analysis.complexity}复杂度，${analysis.language}），`;
+                
+                if (model.id === 'gpt-4') {
+                    reason += `推荐使用GPT-4模型。它在处理${analysis.complexity}任务方面表现出色，特别是在${analysis.type}方面有很强的能力。`;
+                } else if (model.id === 'claude-2') {
+                    reason += `推荐使用Claude 2模型。它擅长处理${analysis.type}任务，尤其在长文本处理和对话一致性方面表现优异。`;
+                } else if (model.id === 'llama-2') {
+                    reason += `推荐使用Llama 2模型。作为开源模型，它在${analysis.type}任务上表现良好，且具有高度可定制性。`;
+                } else if (model.id === 'chatglm') {
+                    reason += `推荐使用ChatGLM模型。它在中文${analysis.type}任务上表现优秀，特别适合处理中文内容。`;
+                } else if (model.id === 'ernie-bot') {
+                    reason += `推荐使用文心一言模型。它在中文${analysis.type}任务上具有优势，特别是在创意写作和多轮对话方面。`;
+                }
+                
+                reason += ` 经过多轮Prompt优化和模型评测，该模型在您的任务上表现最佳。`;
+                
+                return reason;
+            }
+            
+            // 显示模型卡片
+            function displayModels(models) {
+                modelsContainer.innerHTML = '';
+                
+                models.forEach(model => {
+                    const modelCard = document.createElement('div');
+                    modelCard.className = 'model-card';
+                    modelCard.innerHTML = `
+                        <div class="model-name"><i class="${model.icon}" style="margin-right: 8px;"></i>${model.name}</div>
+                        <div class="model-desc">${model.description}</div>
+                        <div class="model-tags">
+                            ${model.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+                        </div>
+                        <div style="margin-top: 15px;"><strong>优势：</strong>${model.strength}</div>
+                    `;
+                    modelsContainer.appendChild(modelCard);
+                });
+            }
+            
+            // 显示推荐模型
+            function displayRecommendedModel(model) {
+                recommendedModel.innerHTML = `
+                    <div class="model-name"><i class="${model.icon}" style="margin-right: 8px;"></i>${model.name}</div>
+                    <div class="model-desc">${model.description}</div>
+                    <div class="model-tags">
+                        ${model.tags.map(tag => `<span class="tag primary">${tag}</span>`).join('')}
+                    </div>
+                    <div style="margin-top: 15px;"><strong>优势：</strong>${model.strength}</div>
+                `;
+            }
+            
+            // 更新步骤指示器
+            function updateStepIndicator(step) {
+                step1Indicator.classList.remove('active');
+                step2Indicator.classList.remove('active');
+                step3Indicator.classList.remove('active');
+                
+                if (step >= 1) step1Indicator.classList.add('active');
+                if (step >= 2) step2Indicator.classList.add('active');
+                if (step >= 3) step3Indicator.classList.add('active');
+            }
+            
+            // 分析按钮点击事件
+            analyzeBtn.addEventListener('click', function() {
+                const task = taskInput.value.trim();
+                
+                if (!task) {
+                    alert('请输入任务描述');
+                    return;
+                }
+                
+                // 更新步骤指示器
+                updateStepIndicator(2);
+                
+                // 显示分析区域
+                analysisSection.classList.remove('hidden');
+                
+                // 模拟分析过程
+                loadingAnalysis.classList.remove('hidden');
+                analysisResult.classList.add('hidden');
+                initialPrompt.classList.add('hidden');
+                
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 5;
+                    progressBar.style.width = `${progress}%`;
+                    progressPercent.textContent = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        // 分析任务
+                        const analysis = analyzeTask(task);
+                        
+                        // 显示分析结果
+                        taskAnalysisText.textContent = `任务类型：${analysis.type} | 复杂度：${analysis.complexity} | 语言：${analysis.language}`;
+                        
+                        // 筛选模型
+                        const filteredModels = filterModels(analysis);
+                        
+                        // 显示模型
+                        displayModels(filteredModels);
+                        
+                        // 生成初始Prompt
+                        const initialPromptContent = generateInitialPrompt(task, analysis);
+                        initialPromptText.textContent = initialPromptContent;
+                        
+                        // 显示结果
+                        loadingAnalysis.classList.add('hidden');
+                        analysisResult.classList.remove('hidden');
+                        initialPrompt.classList.remove('hidden');
+                    }
+                }, 100);
+            });
+            
+            // 优化按钮点击事件
+            optimizeBtn.addEventListener('click', function() {
+                // 更新步骤指示器
+                updateStepIndicator(3);
+                
+                // 显示优化区域
+                optimizationSection.classList.remove('hidden');
+                
+                // 模拟优化过程
+                loadingOptimization.classList.remove('hidden');
+                optimizationResult.classList.add('hidden');
+                
+                let progress = 0;
+                const interval = setInterval(() => {
+                    progress += 5;
+                    optimizationProgress.style.width = `${progress}%`;
+                    optimizationPercent.textContent = `${progress}%`;
+                    
+                    if (progress >= 100) {
+                        clearInterval(interval);
+                        
+                        // 获取任务和分析结果
+                        const task = taskInput.value.trim();
+                        const analysis = analyzeTask(task);
+                        const filteredModels = filterModels(analysis);
+                        
+                        // 选择最佳模型
+                        const bestModel = selectBestModel(filteredModels, analysis);
+                        
+                        // 优化Prompt
+                        const initialPromptContent = generateInitialPrompt(task, analysis);
+                        const optimizedPromptContent = optimizePrompt(initialPromptContent, bestModel);
+                        
+                        // 显示优化结果
+                        optimizedPromptText.textContent = optimizedPromptContent;
+                        displayRecommendedModel(bestModel);
+                        
+                        // 生成推荐理由
+                        const reason = generateRecommendationReason(bestModel, analysis);
+                        recommendationReason.textContent = reason;
+                        
+                        // 显示结果
+                        loadingOptimization.classList.add('hidden');
+                        optimizationResult.classList.remove('hidden');
+                    }
+                }, 150);
+            });
+        });
+    </script>
+</body>
+</html>
